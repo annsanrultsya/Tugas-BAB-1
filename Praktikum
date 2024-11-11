@@ -1,0 +1,106 @@
+import 'dart:async';
+
+// Enum untuk role pengguna
+enum Role { Admin, Customer }
+
+// Kelas Product
+class Product {
+  String productName;
+  double price;
+  bool inStock;
+
+  Product(this.productName, this.price, this.inStock);
+}
+
+// Kelas User
+class User {
+  String name;
+  int age;
+  late List<Product>? products;
+  Role? role;
+
+  User(this.name, this.age, this.role);
+}
+
+// Subclass AdminUser yang mewarisi User
+class AdminUser extends User {
+  AdminUser(String name, int age, Role role) : super(name, age, role);
+
+  // Menambahkan produk ke daftar produk
+  void addProduct(Product product) {
+    try {
+      if (!product.inStock) {
+        throw Exception(
+            'Produk ${product.productName} tidak tersedia dalam stok.');
+      }
+      products ??= [];
+      products!.add(product);
+      print('Produk ${product.productName} berhasil ditambahkan.');
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  // Menghapus produk dari daftar produk
+  void removeProduct(String productName) {
+    products?.removeWhere((product) => product.productName == productName);
+    print('Produk $productName berhasil dihapus.');
+  }
+}
+
+// Subclass CustomerUser yang mewarisi User
+class CustomerUser extends User {
+  CustomerUser(String name, int age, Role role) : super(name, age, role);
+
+  // Melihat daftar produk
+  void viewProducts() {
+    if (products != null && products!.isNotEmpty) {
+      print('Daftar Produk:');
+      for (var product in products!) {
+        print(
+            '- ${product.productName} (Harga: ${product.price}, Stok: ${product.inStock ? 'Tersedia' : 'Habis'})');
+      }
+    } else {
+      print('Tidak ada produk dalam daftar.');
+    }
+  }
+}
+
+// Fungsi asinkron untuk meniru pengambilan data produk dari server
+Future<void> fetchProductDetails(String productName) async {
+  print('Mengambil detail produk $productName...');
+  await Future.delayed(Duration(seconds: 2));
+  print('Detail produk $productName berhasil diambil.');
+}
+
+void main() {
+  // Map untuk menyimpan daftar produk
+  Map<String, Product> productCatalog = {
+    'Laptop': Product('Laptop', 1500.0, true),
+    'Smartphone': Product('Smartphone', 800.0, true),
+    'Headphone': Product('Headphone', 150.0, false),
+  };
+
+  // Menambahkan produk ke dalam set untuk memastikan tidak ada duplikat
+  Set<Product> uniqueProducts = {
+    productCatalog['Laptop']!,
+    productCatalog['Smartphone']!,
+  };
+
+  // Membuat pengguna Admin dan Customer
+  AdminUser admin = AdminUser('John', 35, Role.Admin);
+  CustomerUser customer = CustomerUser('Jane', 28, Role.Customer);
+
+  // Inisialisasi produk untuk admin
+  admin.products = uniqueProducts.toList();
+
+  // Admin menambah produk
+  admin.addProduct(productCatalog['Headphone']!);
+
+  // Customer melihat produk
+  customer.products = admin.products;
+  customer.viewProducts();
+
+  // Memanggil fungsi asinkron
+  fetchProductDetails('Laptop');
+}
